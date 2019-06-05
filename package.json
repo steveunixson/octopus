@@ -10,7 +10,10 @@
     "type": "git",
     "url": "https://github.com/steveunixson"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/puppeteer": "^1.12.4",
+    "puppeteer": "^1.17.0"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "chai": "^4.2.0",
