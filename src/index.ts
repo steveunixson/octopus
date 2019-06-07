@@ -20,7 +20,7 @@ export default class Octopus {
 
 new Octopus().createBrowser('https://google.com')
     .then(() => {
-        log.debug('browser loaded!')
+        log.debug('browser loaded!');
     })
     .catch((exception) => {
         log.error(exception)
