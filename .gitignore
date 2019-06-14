@@ -1,6 +1,5 @@
 node_modules
 error.log.json
-images
 .idea
 dist
 lib

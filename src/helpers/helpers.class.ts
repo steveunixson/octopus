@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as winston from "winston";
+import winston from "winston";
 import {LoggerOptions, format} from "winston";
 import chalk from 'chalk';
 import * as robot from 'robotjs';
@@ -19,6 +19,7 @@ const octopusFormat = format.printf(info => {
 
 const options: LoggerOptions = {
     level: 'debug',
+    exitOnError: true,
     transports: [
         new winston.transports.File({ filename: 'error.log.json', level: 'error' }),
         new winston.transports.Console({
@@ -34,7 +35,6 @@ const options: LoggerOptions = {
             ),
         }),
     ],
-    exitOnError: false
 };
 
 export default class HelpersClass {
@@ -78,6 +78,10 @@ export class VisionHelper {
     public static async type(text: string): Promise<void> {
         await robot.typeString(text);
         // create logic for string special chars detection
+    }
+
+    public static async key(key: string, down: string) {
+        await robot.keyToggle(key, down);
     }
 
     public static async click(): Promise<void> {

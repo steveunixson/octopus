@@ -20,24 +20,30 @@ interface Match {
 
 export default class VisionClass {
     private readonly timeout: number;
-    private readonly width: number = robot.getScreenSize().width;
-    private readonly height: number  = robot.getScreenSize().height;
-    private readonly screenOffset: Coordinates = { x: 0, y: 0 };
-    private readonly threshold: number = 0.8;
+    private readonly width: number;
+    private readonly height: number;
+    private screenOffset: Coordinates;
+    private readonly threshold: number;
 
-    constructor(timeout: number, width?: number, height?: number, screenOffset?: Coordinates, threshold?: number) {
+    constructor(
+        timeout: number = 5000,
+        width: number = robot.getScreenSize().width,
+        height: number = robot.getScreenSize().height,
+        screenOffset: Coordinates = { x: 0, y: 0 },
+        threshold: number = 0.8,
+    ) {
+        this.timeout = timeout;
         this.width = width;
         this.height = height;
-        this.timeout = timeout;
         this.screenOffset = screenOffset;
         this.threshold = threshold;
     }
 
-    public async img2mat(data: Buffer): Promise<Mat> {
-        return new cv.Mat(data, this.width, this.height, cv.CV_8UC4);
+    protected async img2mat(data: Buffer): Promise<Mat> {
+        return new cv.Mat(data, this.height, this.width, cv.CV_8UC4);
     }
 
-    public async screen2mat(): Promise<Mat> {
+    protected async screen2mat(): Promise<Mat> {
         const cap: Bitmap = await robot.screen.capture(this.screenOffset.x, this.screenOffset.y, this.width, this.height);
         return this.img2mat(cap.image);
     }
@@ -47,8 +53,8 @@ export default class VisionClass {
         const elementMatrix: Mat = await cv.imreadAsync(element, cv.CV_8UC4);
         const screenMatrixGray: Mat = await screenMatrix.bgrToGray();
         const elementMatrixGray: Mat = await elementMatrix.bgrToGray();
-        /* const elementMatrixGrayScaled = elementMatrixGray.rescale(2); in case of needed rescale of an needle image*/
-        const matched: Mat = await screenMatrixGray.matchTemplate(elementMatrixGray, 5);
+        const elementMatrixGrayScaled = elementMatrixGray.rescale(2);
+        const matched: Mat = await screenMatrixGray.matchTemplate(elementMatrixGrayScaled, 5);
         return matched.minMaxLoc();
     }
 
@@ -64,23 +70,27 @@ export default class VisionClass {
         }
     }
 
-    public async waitFor(element: string, ms: number): Promise<void> {
-        const screenTimer = await setInterval( async () => {
-            const minMax: Match = await this.match(element);
-            const score: number = Number(minMax.maxVal.toFixed(1));
-            await log.info(`EXPECTED: ${this.threshold} | GOT: ${score}`);
-            if (score >= this.threshold) {
-                found.emit('found', score);
-            }
-        }, this.timeout);
-        await found.once('found', (data: number) => {
-            log.info(`FOUND WITH SCORE: ${data}`);
-            clearInterval(screenTimer);
+    public waitFor(element: string, ms: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const screenTimer = setInterval( async () => {
+                const minMax: Match = await this.match(element);
+                const score: number = Number(minMax.maxVal.toFixed(1));
+                await log.info(`EXPECTED: ${this.threshold} | GOT: ${score}`);
+                if (score >= this.threshold) {
+                    found.emit('found', score);
+                }
+            }, ms);
+            const timeoutTimer = setTimeout(() => {
+                log.info(`ELEMENT ${element} NOT FOUND ON THE SCREEN!`);
+                clearInterval(screenTimer);
+                reject(new TimeoutError(`Element ${element} not found after ${this.timeout}ms`));
+            }, this.timeout);
+            found.once('found', (data: number) => {
+                log.info(`FOUND WITH SCORE: ${data}`);
+                resolve();
+                clearTimeout(timeoutTimer);
+                clearInterval(screenTimer);
+            });
         });
-        await setTimeout(() => {
-            log.info(`ELEMENT ${element} NOT FOUND ON THE SCREEN!`);
-            clearInterval(screenTimer);
-            throw new TimeoutError(`Element ${element} not found after ${this.timeout}ms`)
-        }, this.timeout);
     }
 }

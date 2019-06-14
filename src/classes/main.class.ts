@@ -9,7 +9,7 @@ and that's all folks! No Safari for now, because I don't have a mac
 Maybe I should get one
 Just kidding I am a broke ass
 */
-import * as puppeteer from 'puppeteer';
+import puppeteer, {LaunchOptions} from 'puppeteer'
 import {Browser, Page} from "puppeteer";
 
 interface Settings {
@@ -24,15 +24,17 @@ export default class Bootstrap {
     private readonly height: number;
     private readonly timeout: number;
     private readonly headless: boolean;
-    public browser: Browser;
-    public page: Page;
+    public browser!: Browser;
+    public page!: Page;
+
     constructor(settings: Settings) {
         this.width = settings.width;
         this.height = settings.height;
         this.timeout = settings.timeout;
         this.headless = settings.headless;
     }
-    private chromeBrowser(): object {
+
+    private chromeBrowser(): LaunchOptions {
         return {
             headless: this.headless,
             args: [
