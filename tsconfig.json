@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2017",
+    "lib": ["es2015", "es2016", "dom", "es2018.promise"],
     "module": "commonjs",
     "allowJs": true,
     "outDir": "./dist",
