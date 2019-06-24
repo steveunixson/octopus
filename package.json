@@ -1,9 +1,12 @@
 {
-  "name": "octopus",
-  "version": "0.0.1",
+  "name": "octopus-vision-kernel",
+  "version": "0.0.5",
   "scripts": {
-    "start": "webpack"
+    "start": "webpack",
+    "build": "tsc --declaration",
+    "types" : "dist/src/index.d.ts"
   },
+  "main": "dist/src/index.js",
   "author": "steveunixson",
   "license": "MIT",
   "repository": {
